@@ -1,0 +1,21 @@
+{
+  "name": "MEV",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "bnc-sdk": "^4.6.7",
+    "dotenv": "^16.4.5",
+    "ethers": "^5.4.0",
+    "ethers-private": "^2.0.0",
+    "web3": "^4.5.0",
+    "ws": "^8.16.0"
+  }
+}
