@@ -10,7 +10,6 @@ dotenv.config();
 // ============web3 init part==============
 const web3 = new Web3(process.env.RPC_URL);
 const targetBNBAmount= '100000000000000000000'; // This is 100BNB, meaning only trade once watch over 100BNB to get big opportunity, you can change this value as you want
-// const targetBNBAmount= '1000000000000000'
 let swapEthGasPrice = BigInt('40000000000'); // 40gwei, Default gasPrice to buy target token
 let swapTokenGasPrice = BigInt('20000000000'); // 20gwei Default gasPrice to sell target token
 const honeypotCheck = false; // Set false if you trust the token owner as this may affect the speed
@@ -18,6 +17,8 @@ const uniswapAbi = new ethers.utils.Interface(PANCAKE_ROUTER_ABI);
 const wssprovider = new ethers.providers.WebSocketProvider(process.env.RPC_URL_WSS)
 const swapETHForExactTokensReg = new RegExp("^0xfb3bdb41");
 const swapExactETHForTokensReg = new RegExp("^0x7ff36ab5");
+
+const oneTimeTx = false; // Set this as true if you want to execute trading only one time
 let onTrading = false;
 
 let privateKeyValidated = process.env.PRIVATE_KEY;
@@ -58,7 +59,7 @@ let swapExactETHForTokens = async (txData) => {
         to: PANCAKE_ROUTER_ADDRESS,
         data: swapExactETHForTokensTx.encodeABI(),
         gasPrice: web3.utils.toHex(gasPrice),
-        // gasLimit: web3.utils.toHex(900000),
+        gasLimit: web3.utils.toHex(1500000),
         value: value, //should be BigInt type
         // value: web3.utils.toWei(1, 'ether'), //BigInt type
         nonce: web3.utils.toHex(await web3.eth.getTransactionCount(privateToaddr.address)),
@@ -156,7 +157,7 @@ let swapExactTokensForETHSupportingFeeOnTransferTokens = async (txData) => {
         to: PANCAKE_ROUTER_ADDRESS,
         data: swapExactTokensForETHSupportingFeeOnTransferTokensExactTokensForEHTx.encodeABI(),
         gasPrice: web3.utils.toHex(gasPrice),
-        // gasLimit: web3.utils.toHex(900000),
+        gasLimit: web3.utils.toHex(1500000),
         // value: web3.utils.toHex(web3.utils.fromWei(value,'ether')),
         nonce: web3.utils.toHex(await web3.eth.getTransactionCount(privateToaddr.address)),
     };
@@ -185,7 +186,6 @@ wssprovider.on("pending", async (tx) =>
                             console.log("tx",transaction)
                             console.log("value",BigInt(transaction.value))
                             if(!transaction.from||String(transaction.from).toLowerCase() != String(privateToaddr.address).toLowerCase()){
-                                console.log("hhhhhhhh");
                                 if(transaction.value){
                                     if(BigInt(transaction.value) >= BigInt(targetBNBAmount) && BNBVal >= BigInt(transaction.value)){ 
                                         const decodedInput = uniswapAbi.parseTransaction({
@@ -223,7 +223,13 @@ wssprovider.on("pending", async (tx) =>
                                                         onTrading = false;
                                                         return 0;
                                                     }
+                                                    let resultBNB = await getBNBBalance(privateToaddr.address);
+                                                    let earning = Number(resultBNB - BNBVal);
+                                                    console.log("=================Earning================= is ", earning/Math.pow(10, 18));
                                                     onTrading = false;
+                                                    if(oneTimeTx){
+                                                        wssprovider.exit();
+                                                    }
                                                 }
                                                 else{
                                                     console.log("=============Honeypot checked failed, so ignore this transaction==============")
