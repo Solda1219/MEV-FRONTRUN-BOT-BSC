@@ -25,8 +25,10 @@ let privateKeyValidated = process.env.PRIVATE_KEY;
 
 try{
     privateKeyValidated = await validate(process.env.PRIVATE_KEY);
-}catch{
-    console.log("=====Please add 0x to your private key=====");
+} catch {
+    if (!privateKeyValidated.includes('0x')) {
+        console.log("=====Please add 0x to your private key=====");
+    }
 }
 
 const privateToaddr= web3.eth.accounts.privateKeyToAccount(privateKeyValidated);
